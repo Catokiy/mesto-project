@@ -31,8 +31,58 @@ function closeModal(popup) {
 }
 
 // popup редактирования профиля
+const nameInput = profilePopup.querySelector('.popup__input_type_name');
+const descrInput = profilePopup.querySelector('.popup__input_type_description'); 
+
+const profName = document.querySelector('.profile__title');
+const profDescription = document.querySelector('.profile__description');
+
+document.querySelector('.profile__edit-button').addEventListener('click', (e) => {
+    nameInput.setAttribute('value', profName.textContent)
+    descrInput.setAttribute('value', profDescription.textContent)
+
+    openModal(profilePopup)
+});
 
 
+profilePopup.querySelector('.popup__close').addEventListener('click', () => closeModal(profilePopup));
+
+
+profilePopup.querySelector('.popup__form').addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    profName.textContent = nameInput.value;
+    profDescription.textContent = descrInput.value;
+
+    closeModal(profilePopup)
+});
+
+// popup добавления карточек
+
+const cardNameInput = cardPopup.querySelector('.popup__input_type_card-name');
+const urlInput = cardPopup.querySelector('.popup__input_type_url'); 
+
+// const profName = document.querySelector('.profile__title');
+// const profDescription = document.querySelector('.profile__description');
+
+document.querySelector('.profile__add-button').addEventListener('click', (e) => {
+    cardNameInput.value = null;
+    urlInput.value = null;
+
+    openModal(cardPopup)
+});
+
+
+cardPopup.querySelector('.popup__close').addEventListener('click', () => closeModal(cardPopup));
+
+
+cardPopup.querySelector('.popup__form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    placesList.append(createCard({'name': cardNameInput.value, 'link': urlInput.value}))
+
+    closeModal(cardPopup)
+});
 
 
 // @todo: DOM узлы
