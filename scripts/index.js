@@ -12,9 +12,13 @@ const createCard = function (cardItem) {
     const card = cardTemplate.querySelector('.card').cloneNode(true);
     const cardImage = card.querySelector('.card__image');
     const cardTitle = card.querySelector('.card__title');
+    const cardLikeButton = card.querySelector('.card__like-button');
+    const cardDeleteButton = card.querySelector('.card__delete-button');
 
     cardImage.setAttribute('src', cardItem['link']);
     cardTitle.textContent = cardItem['name'];
+    cardLikeButton.addEventListener('click', (e) => e.target.classList.toggle('card__like-button_is-active'))
+    cardDeleteButton.addEventListener('click', (e) => e.target.closest('.card').remove())
     return card
 }
 
