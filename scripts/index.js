@@ -3,7 +3,16 @@ const placesList = document.querySelector('.places__list')
 
 const profilePopup = document.querySelector('.popup_type_edit')
 const cardPopup = document.querySelector('.popup_type_new-card')
+
 const imagePopup = document.querySelector('.popup_type_image')
+const imagePopupSrc = imagePopup.querySelector('.popup__image')
+const imagePopupTitle = imagePopup.querySelector('.popup__caption')
+const imagePopupClose = imagePopup.querySelector('.popup__close')
+
+profilePopup.classList.add('popup_is-animated')
+cardPopup.classList.add('popup_is-animated')
+imagePopup.classList.add('popup_is-animated')
+
 
 
 // Функция создания карточек
@@ -16,6 +25,12 @@ const createCard = function (cardItem) {
     const cardDeleteButton = card.querySelector('.card__delete-button');
 
     cardImage.setAttribute('src', cardItem['link']);
+    cardImage.addEventListener('click', () => {
+        imagePopupSrc.setAttribute('src', cardItem['link'])
+        imagePopupTitle.textContent = cardItem['name']
+        imagePopupClose.addEventListener('click', () => closeModal(imagePopup)) 
+        openModal(imagePopup)
+    })
     cardTitle.textContent = cardItem['name'];
     cardLikeButton.addEventListener('click', (e) => e.target.classList.toggle('card__like-button_is-active'))
     cardDeleteButton.addEventListener('click', (e) => e.target.closest('.card').remove())
@@ -42,8 +57,8 @@ const profName = document.querySelector('.profile__title');
 const profDescription = document.querySelector('.profile__description');
 
 document.querySelector('.profile__edit-button').addEventListener('click', (e) => {
-    nameInput.setAttribute('value', profName.textContent)
-    descrInput.setAttribute('value', profDescription.textContent)
+    nameInput.value = profName.textContent
+    descrInput.value = profDescription.textContent
 
     openModal(profilePopup)
 });
@@ -66,9 +81,6 @@ profilePopup.querySelector('.popup__form').addEventListener('submit', (e) => {
 const cardNameInput = cardPopup.querySelector('.popup__input_type_card-name');
 const urlInput = cardPopup.querySelector('.popup__input_type_url'); 
 
-// const profName = document.querySelector('.profile__title');
-// const profDescription = document.querySelector('.profile__description');
-
 document.querySelector('.profile__add-button').addEventListener('click', (e) => {
     cardNameInput.value = null;
     urlInput.value = null;
@@ -87,12 +99,3 @@ cardPopup.querySelector('.popup__form').addEventListener('submit', (e) => {
 
     closeModal(cardPopup)
 });
-
-
-// @todo: DOM узлы
-
-// @todo: Функция создания карточки
-
-// @todo: Функция удаления карточки
-
-// @todo: Вывести карточки на страницу
