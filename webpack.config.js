@@ -7,8 +7,7 @@ module.exports = {
   entry: { main: './src/scripts/index.js' },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'main.js',
-        publicPath: ''
+    filename: 'main.js'
   },
     mode: 'development',
   devServer: {
@@ -23,10 +22,10 @@ module.exports = {
         test: /\.js$/,
         use: 'babel-loader',
         exclude: /node_modules/
-      },
+      }, 
       {
-        test: /\.(png|svg|jpg|gif|woff(2)?|eot|ttf|otf)$/,
-        type: 'asset/resource'
+        test: /\.(png|jpg|jpeg|gif|svg)$/i,
+        type: 'asset/resource',
       },
       {
         test: /\.css$/,

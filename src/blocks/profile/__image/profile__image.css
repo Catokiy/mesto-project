@@ -4,6 +4,7 @@
   -webkit-border-radius: 50%;
   -moz-border-radius: 50%;
   border-radius: 50%;
+  background-image: url('../../../images/avatar.jpg');
   background-size: cover;
   background-position: center;
   margin: 0 29px 0 0;
