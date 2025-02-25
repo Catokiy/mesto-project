@@ -1,4 +1,5 @@
-// @todo: Темплейт карточки
+import '../pages/index.css'; 
+
 const placesList = document.querySelector('.places__list')
 
 const profilePopup = document.querySelector('.popup_type_edit')
@@ -43,6 +44,11 @@ initialCards.forEach((item => placesList.append(createCard(item))));
 
 function openModal(popup) {      
     popup.classList.add('popup_is-opened');
+    document.addEventListener("keydown", (e) => {if (e.key == "Escape") closeModal(popup)});
+    popup.addEventListener("click", (e) => {
+        if (e.target === e.currentTarget){
+            closeModal(popup)}
+        });
 }
 
 function closeModal(popup) {      
@@ -52,6 +58,8 @@ function closeModal(popup) {
 // popup редактирования профиля
 const nameInput = profilePopup.querySelector('.popup__input_type_name');
 const descrInput = profilePopup.querySelector('.popup__input_type_description'); 
+const profileInputArray = [nameInput, descrInput]
+const profileSubmitButton = profilePopup.querySelector('.popup__button')
 
 const profName = document.querySelector('.profile__title');
 const profDescription = document.querySelector('.profile__description');
@@ -63,6 +71,52 @@ document.querySelector('.profile__edit-button').addEventListener('click', (e) =>
     openModal(profilePopup)
 });
 
+const showInputError = (formElement, validMessage) => {
+    const formError = document.querySelector(`.popup__error_type_${formElement.id}`);
+    formError.textContent = validMessage
+    formError.classList.add("popup__error_active")
+    formElement.classList.add("popup__input_error")
+}
+
+const hideInputError = (formElement, validMessage) => {
+    const formError = document.querySelector(`.popup__error_type_${formElement.id}`);
+    formError.textContent = ""
+    formError.classList.remove("popup__error_active")
+    formElement.classList.remove("popup__input_error")
+}
+
+const toggleButton = (button, inputArray) => {
+    if (inputArray.some((input) => {
+        return !input.validity.valid;
+      })) {
+        button.classList.add("inactive")
+        button.disabled = true;
+    }
+    else {
+        button.classList.remove("inactive")
+        button.disabled = false;
+
+    }
+}
+
+
+const checkValidity = (formElement, button, inputArray) => {
+    toggleButton(button, inputArray)
+    if (!formElement.validity.valid) {
+        showInputError(formElement, formElement.validationMessage)
+    }
+    else {
+        hideInputError(formElement, formElement.validationMessage)
+    }
+}
+
+
+
+
+
+
+nameInput.addEventListener('input', (e) => checkValidity(nameInput, profileSubmitButton, profileInputArray))
+descrInput.addEventListener('input', (e) => checkValidity(descrInput, profileSubmitButton, profileInputArray))
 
 profilePopup.querySelector('.popup__close').addEventListener('click', () => closeModal(profilePopup));
 
@@ -80,6 +134,14 @@ profilePopup.querySelector('.popup__form').addEventListener('submit', (e) => {
 
 const cardNameInput = cardPopup.querySelector('.popup__input_type_card-name');
 const urlInput = cardPopup.querySelector('.popup__input_type_url'); 
+const cardInputArray = [cardNameInput, urlInput]
+const cardSubmitButton = cardPopup.querySelector('.popup__button')
+
+cardNameInput.addEventListener('input', (e) => checkValidity(cardNameInput, cardSubmitButton, cardInputArray))
+urlInput.addEventListener('input', (e) => checkValidity(urlInput, cardSubmitButton, cardInputArray))
+
+profilePopup.querySelector('.popup__close').addEventListener('click', () => closeModal(profilePopup));
+
 
 document.querySelector('.profile__add-button').addEventListener('click', (e) => {
     cardNameInput.value = null;

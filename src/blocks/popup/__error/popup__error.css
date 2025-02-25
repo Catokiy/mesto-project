@@ -1,0 +1,17 @@
+.popup__error {
+    display: inline-block;
+    opacity: 0;
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 15px;
+    color: #ff0000;
+    margin-bottom: 13px;
+    margin-top: 5;
+    min-height: 30px;
+}
+
+.popup__error_active {
+    opacity: 1;
+}
