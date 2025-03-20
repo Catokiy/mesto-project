@@ -1,10 +1,14 @@
 import '../pages/index.css'; 
-import { initialCards } from './cards';
+import { ServerConnector } from './server-connection';
+import { popup } from './popup-functions';
+
+const profileId = await ServerConnector.getProfileId().then((id) => {return id})
 
 const placesList = document.querySelector('.places__list')
 
 const profilePopup = document.querySelector('.popup_type_edit')
 const cardPopup = document.querySelector('.popup_type_new-card')
+const avatarPopup = document.querySelector('.popup_type_avatar')
 
 const imagePopup = document.querySelector('.popup_type_image')
 const imagePopupSrc = imagePopup.querySelector('.popup__image')
@@ -24,37 +28,68 @@ const createCard = function (cardItem) {
     const cardImage = card.querySelector('.card__image');
     const cardTitle = card.querySelector('.card__title');
     const cardLikeButton = card.querySelector('.card__like-button');
+    const cardLikeCounter = card.querySelector('.card__like-counter')
     const cardDeleteButton = card.querySelector('.card__delete-button');
+    cardDeleteButton.style.display = 'none'
 
-    cardImage.setAttribute('src', cardItem['link']);
+    cardImage.setAttribute('src', cardItem.link);
     cardImage.addEventListener('click', () => {
-        imagePopupSrc.setAttribute('src', cardItem['link'])
-        imagePopupTitle.textContent = cardItem['name']
-        imagePopupClose.addEventListener('click', () => closeModal(imagePopup)) 
-        openModal(imagePopup)
+        imagePopupSrc.setAttribute('src', cardItem.link)
+        imagePopupTitle.textContent = cardItem.name
+        imagePopupClose.addEventListener('click', () => popup.closeModal(imagePopup)) 
+        popup.openModal(imagePopup)
     })
+
+    if (cardItem.likes.some((like) => like._id === profileId)) {
+    cardLikeButton.classList.add('card__like-button_is-active')
+    }
+    if (cardItem.owner._id == profileId) {
+    cardDeleteButton.style.display = 'inline-block'
+    cardDeleteButton.addEventListener('click', (e) => {
+        e.target.closest('.card').remove()
+        ServerConnector.deleteCard(cardItem._id)
+    })}
+
+
     cardTitle.textContent = cardItem['name'];
-    cardLikeButton.addEventListener('click', (e) => e.target.classList.toggle('card__like-button_is-active'))
-    cardDeleteButton.addEventListener('click', (e) => e.target.closest('.card').remove())
+    cardLikeButton.addEventListener('click', (e) => {
+        if (e.target.classList.contains('card__like-button_is-active')) {
+            cardLikeCounter.textContent = Number(cardLikeCounter.textContent) - 1
+            ServerConnector.delLike(cardItem._id)
+            .then((res) => res.json())
+            .then((res) => {
+                console.log(res)
+                console.log(e.target.closest('.card'))
+                e.target.closest('.card').parentNode.insertBefore(createCard(res),e.target.closest('.card'))
+            })
+            .then((res) => e.target.closest('.card').remove())
+        } else {
+            cardLikeCounter.textContent = Number(cardLikeCounter.textContent) + 1
+            ServerConnector.putLike(cardItem._id)
+            .then((res) => res.json())
+            .then((res) => {
+                console.log(res)
+                console.log(e.target.closest('.card'))
+                e.target.closest('.card').parentNode.insertBefore(createCard(res),e.target.closest('.card'))
+            }).then((res) => e.target.closest('.card').remove())
+            
+        }
+        e.target.classList.toggle('card__like-button_is-active')
+    })
+
+    cardLikeCounter.textContent = cardItem.likes.length
+    
+    
     return card
 }
-
-initialCards.forEach((item => placesList.append(createCard(item))));
-
-// Общие функции для .popup
-
-function openModal(popup) {      
-    popup.classList.add('popup_is-opened');
-    document.addEventListener("keydown", (e) => {if (e.key == "Escape") closeModal(popup)});
-    popup.addEventListener("click", (e) => {
-        if (e.target === e.currentTarget){
-            closeModal(popup)}
-        });
-}
-
-function closeModal(popup) {      
-    popup.classList.remove('popup_is-opened');
-}
+ServerConnector.getInitialCards()
+.then((initialCards) => 
+    {
+        for (let i=1; i<initialCards.length; i++) {
+            placesList.append(createCard(initialCards[i]));
+        }
+    }
+)
 
 // popup редактирования профиля
 const nameInput = profilePopup.querySelector('.popup__input_type_name');
@@ -64,71 +99,73 @@ const profileSubmitButton = profilePopup.querySelector('.popup__button')
 
 const profName = document.querySelector('.profile__title');
 const profDescription = document.querySelector('.profile__description');
+const profImage = document.querySelector('.profile__image');
+
+ServerConnector.getProfileData().then((profileData) => {
+    profName.textContent = profileData.name
+    profDescription.textContent = profileData.about
+    profImage.style.backgroundImage = `url(${profileData.avatar})`
+})
+
+
 
 document.querySelector('.profile__edit-button').addEventListener('click', (e) => {
     nameInput.value = profName.textContent
     descrInput.value = profDescription.textContent
 
-    openModal(profilePopup)
+    popup.openModal(profilePopup)
 });
 
-const showInputError = (formElement, validMessage) => {
-    const formError = document.querySelector(`.popup__error_type_${formElement.id}`);
-    formError.textContent = validMessage
-    formError.classList.add("popup__error_active")
-    formElement.classList.add("popup__input_error")
-}
-
-const hideInputError = (formElement, validMessage) => {
-    const formError = document.querySelector(`.popup__error_type_${formElement.id}`);
-    formError.textContent = ""
-    formError.classList.remove("popup__error_active")
-    formElement.classList.remove("popup__input_error")
-}
-
-const toggleButton = (button, inputArray) => {
-    if (inputArray.some((input) => {
-        return !input.validity.valid;
-      })) {
-        button.classList.add("inactive")
-        button.disabled = true;
-    }
-    else {
-        button.classList.remove("inactive")
-        button.disabled = false;
-
-    }
-}
-
-
-const checkValidity = (formElement, button, inputArray) => {
-    toggleButton(button, inputArray)
-    if (!formElement.validity.valid) {
-        showInputError(formElement, formElement.validationMessage)
-    }
-    else {
-        hideInputError(formElement, formElement.validationMessage)
-    }
-}
 
 
 
+nameInput.addEventListener('input', (e) => popup.checkValidity(nameInput, profileSubmitButton, profileInputArray))
+descrInput.addEventListener('input', (e) => popup.checkValidity(descrInput, profileSubmitButton, profileInputArray))
 
-
-
-nameInput.addEventListener('input', (e) => checkValidity(nameInput, profileSubmitButton, profileInputArray))
-descrInput.addEventListener('input', (e) => checkValidity(descrInput, profileSubmitButton, profileInputArray))
-
-profilePopup.querySelector('.popup__close').addEventListener('click', () => closeModal(profilePopup));
+profilePopup.querySelector('.popup__close').addEventListener('click', () => popup.closeModal(profilePopup));
 
 
 profilePopup.querySelector('.popup__form').addEventListener('submit', (e) => {
     e.preventDefault();
+    ServerConnector.editProfile(nameInput.value,descrInput.value)
+    .then((result) => result.json())
+    .then((profileData) => {
+        profName.textContent = profileData.name;
+        profDescription.textContent = profileData.about;
+        profImage.style.backgroundImage = `url(${profileData.avatar})`
+    })
+    popup.closeModal(profilePopup)
+});
 
-    profName.textContent = nameInput.value;
-    profDescription.textContent = descrInput.value;
+// popup редактирования аватара
 
-    closeModal(profilePopup)
+const avatarInput = avatarPopup.querySelector('.popup__input_type_avatar'); 
+const avatarSubmitButton = avatarPopup.querySelector('.popup__button')
+
+avatarInput.addEventListener('input', (e) => popup.checkValidity(avatarInput, avatarSubmitButton, [avatarInput]))
+
+avatarPopup.querySelector('.popup__close').addEventListener('click', () => popup.closeModal(avatarPopup));
+
+
+document.querySelector('.profile__edit-avatar-button').addEventListener('click', (e) => {
+    avatarInput.value = null;
+
+    popup.openModal(avatarPopup)
+});
+
+
+avatarPopup.querySelector('.popup__close').addEventListener('click', () => popup.closeModal(avatarPopup));
+
+
+avatarPopup.querySelector('.popup__form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    ServerConnector.editAvatar(avatarInput.value)
+    .then((result) => result.json())
+    .then((profileData) =>
+    {  
+        profImage.style.backgroundImage = `url(${profileData.avatar})`
+        popup.closeModal(avatarPopup)
+    })
 });
 
 // popup добавления карточек
@@ -138,27 +175,31 @@ const urlInput = cardPopup.querySelector('.popup__input_type_url');
 const cardInputArray = [cardNameInput, urlInput]
 const cardSubmitButton = cardPopup.querySelector('.popup__button')
 
-cardNameInput.addEventListener('input', (e) => checkValidity(cardNameInput, cardSubmitButton, cardInputArray))
-urlInput.addEventListener('input', (e) => checkValidity(urlInput, cardSubmitButton, cardInputArray))
+cardNameInput.addEventListener('input', (e) => popup.checkValidity(cardNameInput, cardSubmitButton, cardInputArray))
+urlInput.addEventListener('input', (e) => popup.checkValidity(urlInput, cardSubmitButton, cardInputArray))
 
-profilePopup.querySelector('.popup__close').addEventListener('click', () => closeModal(profilePopup));
+profilePopup.querySelector('.popup__close').addEventListener('click', () => popup.closeModal(profilePopup));
 
 
 document.querySelector('.profile__add-button').addEventListener('click', (e) => {
     cardNameInput.value = null;
     urlInput.value = null;
 
-    openModal(cardPopup)
+    popup.openModal(cardPopup)
 });
 
 
-cardPopup.querySelector('.popup__close').addEventListener('click', () => closeModal(cardPopup));
+cardPopup.querySelector('.popup__close').addEventListener('click', () => popup.closeModal(cardPopup));
 
 
 cardPopup.querySelector('.popup__form').addEventListener('submit', (e) => {
     e.preventDefault();
+    ServerConnector.addCard(cardNameInput.value,urlInput.value)
     
-    placesList.append(createCard({'name': cardNameInput.value, 'link': urlInput.value}))
-
-    closeModal(cardPopup)
+    .then((result) => result.json())
+    .then((cardData) =>
+    {
+        console.log(cardData)
+        placesList.append(createCard(cardData))})   
+    popup.closeModal(cardPopup)
 });

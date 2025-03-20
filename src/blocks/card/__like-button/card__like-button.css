@@ -13,6 +13,9 @@
   -ms-transition: 0.3s;
   -o-transition: 0.3s;
   transition: 0.3s;
+  position: relative;
+  bottom: 6px;
+  right: 0.25px;
 }
 
 .card__like-button:hover {
